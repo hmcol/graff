@@ -9,57 +9,45 @@ use crate::num::Point;
 
 #[derive(Debug)]
 pub struct Camera {
-    left: f64,
-    right: f64,
-    top: f64,
-    bottom: f64,
+    pub center: Point,
+    width: f64,
+    height: f64,
 }
 
 impl Camera {
     pub fn new(center: Point, width: f64, height: f64) -> Self {
         Camera {
-            left: center.x - width / 2.0,
-            right: center.x + width / 2.0,
-            top: center.y + height / 2.0,
-            bottom: center.y - height / 2.0,
+            center,
+            width,
+            height,
         }
     }
 
     // camera info -------------------------------------------------------------
 
-    pub fn width(&self) -> f64 {
-        self.right - self.left
+    pub fn left(&self) -> f64 {
+        self.center.x - self.width / 2.0
     }
 
-    pub fn height(&self) -> f64 {
-        self.top - self.bottom
+    pub fn right(&self) -> f64 {
+        self.center.x + self.width / 2.0
     }
 
-    fn center(&self) -> Point {
-        Point::new(
-            (self.left + self.right) / 2.0,
-            (self.top + self.bottom) / 2.0,
-        )
+    pub fn top(&self) -> f64 {
+        self.center.y + self.height / 2.0
     }
 
-    pub fn set_height(&mut self, height: f64) {
-        let center = Point::new(
-            (self.left + self.right) / 2.0,
-            (self.top + self.bottom) / 2.0,
-        );
+    pub fn bottom(&self) -> f64 {
+        self.center.y - self.height / 2.0
+    }
 
-        self.top = center.y + height / 2.0;
-        self.bottom = center.y - height / 2.0;
+    /// leaves the width the same and adjusts the height to match the aspect ratio
+    pub fn set_aspect_ratio(&mut self, aspect_ratio: f64) {
+        self.height = self.width / aspect_ratio;
     }
 
     pub fn move_to(&mut self, center: Point) {
-        let width = self.width();
-        let height = self.height();
-
-        self.left = center.x - width / 2.0;
-        self.right = center.x + width / 2.0;
-        self.top = center.y + height / 2.0;
-        self.bottom = center.y - height / 2.0;
+        self.center = center;
     }
 
     // drawing -----------------------------------------------------------------
@@ -67,8 +55,8 @@ impl Camera {
     pub fn draw_grid(&self) {
         // vertical lines at x = n for integers n inside the camera width
 
-        let v_min = self.left.floor() as i32;
-        let v_max = self.right.ceil() as i32;
+        let v_min = self.left().floor() as i32;
+        let v_max = self.right().ceil() as i32;
 
         for v in v_min..=v_max {
             let mut color = GRAY;
@@ -85,8 +73,8 @@ impl Camera {
 
         // horizontal lines at y = n for integers n inside the camera height
 
-        let h_min = self.bottom.floor() as i32;
-        let h_max = self.top.ceil() as i32;
+        let h_min = self.bottom().floor() as i32;
+        let h_max = self.top().ceil() as i32;
 
         for h in h_min..=h_max {
             let mut color = GRAY;
@@ -103,7 +91,8 @@ impl Camera {
     }
 
     pub fn draw_function(&self, f: &Function) {
-        let samples = f.sample((self.left, self.right), 1000);
+        let interval = (self.left(), self.right());
+        let samples = f.sample(interval, 1000);
 
         let screen_points: Vec<(f32, f32)> = samples
             .iter()
@@ -122,12 +111,12 @@ impl Camera {
 
     fn euc_to_screen_x(&self, x: f64) -> f32 {
         // (x - left) + screen_width / cam_width
-        ((x - self.left) * (screen_width() as f64) / self.width()) as f32
+        ((x - self.left()) * (screen_width() as f64) / self.width) as f32
     }
 
     fn euc_to_screen_y(&self, y: f64) -> f32 {
         // -(y - top) + screen_height / cam_height
-        (-(y - self.top) * (screen_height() as f64) / self.height()) as f32
+        (-(y - self.top()) * (screen_height() as f64) / self.height) as f32
     }
 
     fn euc_to_screen(&self, p: Point) -> (f32, f32) {

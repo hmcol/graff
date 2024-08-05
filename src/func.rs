@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Function {
     Identity,
     Constant(f64),
@@ -30,11 +30,11 @@ impl Function {
         }
     }
 
-    pub fn sample(&self, domain: (f64, f64), steps: usize) -> Vec<(f64, f64)> {
-        let delta = (domain.1 - domain.0) / steps as f64;
+    pub fn sample(&self, interval: (f64, f64), steps: usize) -> Vec<(f64, f64)> {
+        let delta = (interval.1 - interval.0) / steps as f64;
 
         (0..=steps)
-            .map(|i| domain.0 + delta * (i as f64)) // x_i = left + delta_x * i
+            .map(|i| interval.0 + delta * (i as f64)) // x_i = left + delta_x * i
             .map(|x| (x, self.eval(x))) // point_i = (x_i, f(x_i))
             .collect()
     }
