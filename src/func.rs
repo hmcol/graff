@@ -40,6 +40,8 @@ impl Function {
     }
 }
 
+// function constructors -------------------------------------------------------
+
 pub const X: Function = Function::Identity;
 
 pub fn fn_const(c: f64) -> Function {
