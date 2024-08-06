@@ -14,6 +14,14 @@ pub struct Camera {
     height: f64,
 }
 
+impl Default for Camera {
+    fn default() -> Self {
+        let default_width = 20.0;
+        let default_height = default_width * (screen_height() as f64) / (screen_width() as f64);
+        Camera::new(Point::origin(), default_width, default_height)
+    }
+}
+
 impl Camera {
     pub fn new(center: Point, width: f64, height: f64) -> Self {
         Camera {
@@ -41,13 +49,33 @@ impl Camera {
         self.center.y - self.height / 2.0
     }
 
+    // modify camera -----------------------------------------------------------
+    
+
+    pub fn reset(&mut self) {
+        self.center = Point::origin();
+        self.width = 20.0;
+        self.set_aspect_ratio((screen_width() / screen_height()) as f64);
+    }
+
+    pub fn set_scale(&mut self, scale: f64) {
+        self.width *= scale;
+        self.height *= scale;
+    }
+
     /// leaves the width the same and adjusts the height to match the aspect ratio
     pub fn set_aspect_ratio(&mut self, aspect_ratio: f64) {
         self.height = self.width / aspect_ratio;
     }
 
-    pub fn move_to(&mut self, center: Point) {
-        self.center = center;
+    pub fn move_by(&mut self, delta: Vec2) {
+        self.center.x += delta.x as f64 * self.width / 2.0;
+        self.center.y += -delta.y as f64 * self.height / 2.0;
+    }
+
+    pub fn zoom_by(&mut self, factor: f64) {
+        self.width *= factor as f64;
+        self.height *= factor as f64;
     }
 
     // drawing -----------------------------------------------------------------
@@ -121,5 +149,12 @@ impl Camera {
 
     fn euc_to_screen(&self, p: Point) -> (f32, f32) {
         (self.euc_to_screen_x(p.x), self.euc_to_screen_y(p.y))
+    }
+
+    pub fn screen_to_euc(&self, p: (f32, f32)) -> Point {
+        let x = self.left() + (p.0 as f64) * self.width / (screen_width() as f64);
+        let y = self.top() - (p.1 as f64) * self.height / (screen_height() as f64);
+
+        Point::new(x, y)
     }
 }

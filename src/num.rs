@@ -13,3 +13,14 @@ impl Point {
         Point { x: 0.0, y: 0.0 }
     }
 }
+
+impl std::ops::Add for Point {
+    type Output = Self;
+
+    fn add(self, other: Self) -> Self {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
