@@ -1,9 +1,10 @@
-use macroquad::prelude::*;
+use macroquad::{color, prelude::*};
 
 // -----------------------------------------------------------------------------
 
 use crate::func::Function;
 use crate::num::Point;
+use crate::Evaluate;
 
 // =============================================================================
 
@@ -50,7 +51,6 @@ impl Camera {
     }
 
     // modify camera -----------------------------------------------------------
-    
 
     pub fn reset(&mut self) {
         self.center = Point::origin();
@@ -73,9 +73,19 @@ impl Camera {
         self.center.y += -delta.y as f64 * self.height / 2.0;
     }
 
-    pub fn zoom_by(&mut self, factor: f64) {
-        self.width *= factor as f64;
-        self.height *= factor as f64;
+    pub fn zoom_by(&mut self, y_scroll: f32) {
+
+
+        let factor = if y_scroll < 0.0 {
+            1.5
+        } else if y_scroll > 0.0 {
+            1.0 / 1.5
+        } else {
+            1.0
+        };
+
+        self.width *= factor;
+        self.height *= factor;
     }
 
     // drawing -----------------------------------------------------------------
@@ -118,7 +128,7 @@ impl Camera {
         }
     }
 
-    pub fn draw_function(&self, f: &Function) {
+    pub fn draw_function<F: Evaluate>(&self, f: &F, color: Color) {
         let interval = (self.left(), self.right());
         let samples = f.sample(interval, 1000);
 
@@ -131,7 +141,7 @@ impl Camera {
             let (x1, y1) = pair[0];
             let (x2, y2) = pair[1];
 
-            draw_line(x1, y1, x2, y2, 2.0, RED);
+            draw_line(x1, y1, x2, y2, 2.0, color);
         }
     }
 

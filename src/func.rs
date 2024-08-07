@@ -1,3 +1,17 @@
+pub trait Evaluate {
+    fn eval(&self, x: f64) -> f64;
+    fn sample(&self, interval: (f64, f64), steps: usize) -> Vec<(f64, f64)> {
+        let delta = (interval.1 - interval.0) / steps as f64;
+
+        (0..=steps)
+            .map(|i| interval.0 + delta * (i as f64)) // x_i = left + delta_x * i
+            .map(|x| (x, self.eval(x))) // point_i = (x_i, f(x_i))
+            .collect()
+    }
+}
+
+// =============================================================================
+
 #[derive(Debug, Clone)]
 pub enum Function {
     Identity,
@@ -13,8 +27,8 @@ pub enum Function {
     Log(Box<Function>), // natural logarithm (log base e)
 }
 
-impl Function {
-    pub fn eval(&self, x: f64) -> f64 {
+impl Evaluate for Function {
+    fn eval(&self, x: f64) -> f64 {
         match self {
             Function::Identity => x,
             Function::Constant(c) => *c,
@@ -28,15 +42,6 @@ impl Function {
             Function::Exp(f) => f.eval(x).exp(),
             Function::Log(f) => f.eval(x).ln(),
         }
-    }
-
-    pub fn sample(&self, interval: (f64, f64), steps: usize) -> Vec<(f64, f64)> {
-        let delta = (interval.1 - interval.0) / steps as f64;
-
-        (0..=steps)
-            .map(|i| interval.0 + delta * (i as f64)) // x_i = left + delta_x * i
-            .map(|x| (x, self.eval(x))) // point_i = (x_i, f(x_i))
-            .collect()
     }
 }
 
