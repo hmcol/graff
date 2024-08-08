@@ -49,14 +49,12 @@ async fn main() {
             cam.zoom_by(y_scroll);
         }
 
-        
-        p = approx::compute_gradient_descent_step(&f, &p, interval, 0.1);
-        
+        p = approx::compute_gradient_descent_step(&f, &p, interval, 0.2);
 
         // draw stuff
         cam.draw_grid();
         cam.draw_function(&f, RED);
-        cam.draw_function(&p, BLUE);
+        cam.draw_function(&p.to_function_of_x(), BLUE);
         // cam.draw_function(&p1, GREEN);
         // cam.draw_function(&p2, YELLOW);
 

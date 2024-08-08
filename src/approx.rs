@@ -41,10 +41,10 @@ fn error_gradient(f: &Function, p: &Polynomial, interval: (f64, f64)) -> Vec<f64
     let xs: Vec<f64> = distr.sample_iter(&mut rng).take(num_samples).collect();
 
     for x in xs {
-        let fx = f.eval(x);
-        let px = p.eval(x);
+        let fx = f.eval_uni(x);
+        let px = p.to_function_of_x().eval_uni(x);
 
-        for (k, c) in p.coefficients.iter().enumerate() {
+        for (k, _) in p.coefficients.iter().enumerate() {
             // d/dc_k (p_c(x) - f(x))^2
             // c = [c_0, c_1, ..., c_d]
             grad[k] += (px - fx) * x.powi(k as i32) / (num_samples as f64);

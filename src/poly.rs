@@ -2,7 +2,7 @@ use rand::prelude::*;
 
 // -----------------------------------------------------------------------------
 
-use crate::Evaluate;
+use crate::func::*;
 
 // =============================================================================
 
@@ -32,14 +32,14 @@ impl Polynomial {
     pub fn degree(&self) -> usize {
         self.coefficients.len() - 1
     }
-}
 
-impl Evaluate for Polynomial {
-    fn eval(&self, x: f64) -> f64 {
-        self.coefficients
-            .iter()
-            .enumerate()
-            .map(|(i, c)| c * x.powi(i as i32))
-            .sum()
+    pub fn to_function_of_x(&self) -> Function {
+        let mut terms = Vec::new();
+        for (i, c) in self.coefficients.iter().enumerate() {
+            if *c != 0.0 {
+                terms.push(fn_mul(fn_const(*c), fn_powi(X, i as i32)));
+            }
+        }
+        fn_sum(terms)
     }
 }

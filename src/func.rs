@@ -1,11 +1,14 @@
 pub trait Evaluate {
-    fn eval(&self, x: f64) -> f64;
+    fn eval(&self, x: &[f64]) -> f64;
+    fn eval_uni(&self, x: f64) -> f64 {
+        self.eval(&[x])
+    }
     fn sample(&self, interval: (f64, f64), steps: usize) -> Vec<(f64, f64)> {
         let delta = (interval.1 - interval.0) / steps as f64;
 
         (0..=steps)
             .map(|i| interval.0 + delta * (i as f64)) // x_i = left + delta_x * i
-            .map(|x| (x, self.eval(x))) // point_i = (x_i, f(x_i))
+            .map(|x| (x, self.eval(&[x]))) // point_i = (x_i, f(x_i))
             .collect()
     }
 }
@@ -14,8 +17,8 @@ pub trait Evaluate {
 
 #[derive(Debug, Clone)]
 pub enum Function {
-    Identity,
-    Constant(f64),
+    Var(usize), // picks out the i-th variable of the input x = (x_1, x_2, ..., x_n)
+    Const(f64),
     Add(Box<Function>, Box<Function>),
     Sub(Box<Function>, Box<Function>),
     Mul(Box<Function>, Box<Function>),
@@ -25,13 +28,17 @@ pub enum Function {
     Tan(Box<Function>),
     Exp(Box<Function>), // exponential (e^x)
     Log(Box<Function>), // natural logarithm (log base e)
+    Sum(Vec<Function>),
+    Prod(Vec<Function>),
+    PowI(Box<Function>, i32), // integer power
 }
 
 impl Evaluate for Function {
-    fn eval(&self, x: f64) -> f64 {
+    fn eval(&self, x: &[f64]) -> f64 {
         match self {
-            Function::Identity => x,
-            Function::Constant(c) => *c,
+            // if i is out of bounds, return 0, should maybe return an Option::None
+            Function::Var(i) => x.get(*i).copied().unwrap_or(0.0), 
+            Function::Const(c) => *c,
             Function::Add(f1, f2) => f1.eval(x) + f2.eval(x),
             Function::Sub(f1, f2) => f1.eval(x) - f2.eval(x),
             Function::Mul(f1, f2) => f1.eval(x) * f2.eval(x),
@@ -41,16 +48,25 @@ impl Evaluate for Function {
             Function::Tan(f) => f.eval(x).tan(),
             Function::Exp(f) => f.eval(x).exp(),
             Function::Log(f) => f.eval(x).ln(),
+            Function::Sum(fs) => fs.iter().map(|f| f.eval(x)).sum(),
+            Function::Prod(fs) => fs.iter().map(|f| f.eval(x)).product(),
+            Function::PowI(f, n) => f.eval(x).powi(*n),
         }
     }
 }
 
 // function constructors -------------------------------------------------------
 
-pub const X: Function = Function::Identity;
+pub const X: Function = Function::Var(0);
+pub const Y: Function = Function::Var(1);
+pub const Z: Function = Function::Var(2);
+
+pub fn fn_var(i: usize) -> Function {
+    Function::Var(i)
+}
 
 pub fn fn_const(c: f64) -> Function {
-    Function::Constant(c)
+    Function::Const(c)
 }
 
 pub fn fn_add(f1: Function, f2: Function) -> Function {
@@ -87,4 +103,16 @@ pub fn fn_exp(f: Function) -> Function {
 
 pub fn fn_log(f: Function) -> Function {
     Function::Log(Box::new(f))
+}
+
+pub fn fn_sum(fs: Vec<Function>) -> Function {
+    Function::Sum(fs)
+}
+
+pub fn fn_prod(fs: Vec<Function>) -> Function {
+    Function::Prod(fs)
+}
+
+pub fn fn_powi(f: Function, n: i32) -> Function {
+    Function::PowI(Box::new(f), n)
 }
