@@ -4,7 +4,6 @@ use macroquad::{color, prelude::*};
 
 use crate::func::Function;
 use crate::num::Point;
-use crate::Evaluate;
 
 // =============================================================================
 
@@ -74,8 +73,6 @@ impl Camera {
     }
 
     pub fn zoom_by(&mut self, y_scroll: f32) {
-
-
         let factor = if y_scroll < 0.0 {
             1.5
         } else if y_scroll > 0.0 {
@@ -128,7 +125,7 @@ impl Camera {
         }
     }
 
-    pub fn draw_function<F: Evaluate>(&self, f: &F, color: Color) {
+    pub fn draw_function(&self, f: &Function, color: Color) {
         let interval = (self.left(), self.right());
         let samples = f.sample(interval, 1000);
 
