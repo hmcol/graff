@@ -6,6 +6,7 @@ use macroquad::ui::{hash, root_ui, widgets, Skin};
 mod approx;
 mod cam;
 mod func;
+mod int;
 mod num;
 mod poly;
 
@@ -26,17 +27,16 @@ async fn main() {
     let mut cam = Camera::default();
 
     // function setup
-    let four_x_squared = fn_mul(fn_const(4.0), fn_powi(X, 2));
-    let f = fn_exp(fn_div(fn_const(-1.0), four_x_squared));
-    let df = fn_pdv(&f, 0);
+    let f = fn_exp(fn_mul(fn_const(-1.0), fn_powi(X, 2)));
+    let g = fn_sin(fn_powi(X, 2));
 
     // print functions
-    println!("f(x) = {}", f);
-    println!("df(x) = {}", df);
+    // println!("f(x) = {}", f);
 
-    let interval = (-1.0, 1.0);
+    
 
-    let mut p = Polynomial::new_random_with_degree(23);
+    // polynomial setup
+    let mut p = Polynomial::new_random_with_degree(16);
 
     loop {
         clear_background(WHITE);
@@ -59,13 +59,13 @@ async fn main() {
 
         // computations --------------------------------------------------------
 
-        p = approx::compute_gradient_descent_step(&df, &p, interval, 1000, 0.1);
+        p = approx::compute_gradient_descent_step(&f, &p, (-1.0, 1.0), 1000, 0.1);
 
         // drawing -------------------------------------------------------------
         cam.draw_grid();
         cam.draw_function(&f, RED);
-        cam.draw_function(&df, GREEN);
         cam.draw_function(&p.to_function_of_x(), BLUE);
+        cam.draw_function(&g, GREEN);
         // cam.draw_function(&p1, GREEN);
         // cam.draw_function(&p2, YELLOW);
 
