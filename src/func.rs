@@ -1,6 +1,6 @@
 // create modules --------------------------------------------------------------
 
-use crate::poly::{poly_eval, poly_mul};
+use crate::polynomial::{poly_eval, poly_mul};
 
 // Variable Index ==============================================================
 

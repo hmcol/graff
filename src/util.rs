@@ -29,7 +29,7 @@ impl std::ops::Add for Point {
     }
 }
 
-// =============================================================================
+// random ======================================================================
 
 pub fn sample_interval_equidistributed(interval: (f64, f64), steps: usize) -> Vec<f64> {
     let delta = (interval.1 - interval.0) / steps as f64;
@@ -44,4 +44,10 @@ pub fn sample_interval_random(interval: (f64, f64), steps: usize) -> Vec<f64> {
     (0..steps)
         .map(|_| rng.gen_range(interval.0..interval.1))
         .collect()
+}
+
+// integer operations ==========================================================
+
+pub fn factorial(n: u32) -> u64 {
+    (1..=n as u64).product()
 }

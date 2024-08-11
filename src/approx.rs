@@ -2,7 +2,7 @@ use std::vec;
 
 // -----------------------------------------------------------------------------
 
-use crate::{func::*, util::sample_interval_random, poly::poly_eval};
+use crate::{func::*, util::sample_interval_random, polynomial::poly_eval};
 
 // =============================================================================
 

@@ -8,12 +8,12 @@ mod cam;
 mod func;
 mod integration;
 mod util;
-mod poly;
+mod polynomial;
 
 use cam::Camera;
 use func::*;
 use util::Point;
-use poly::Polynomial;
+use polynomial::Polynomial;
 
 // =============================================================================
 
