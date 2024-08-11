@@ -27,13 +27,12 @@ async fn main() {
     let mut cam = Camera::default();
 
     // function setup
+
+    //
     let f = fn_exp(fn_mul(fn_const(-1.0), fn_powi(X, 2)));
-    let g = fn_sin(fn_powi(X, 2));
 
     // print functions
     // println!("f(x) = {}", f);
-
-    
 
     // polynomial setup
     let mut p = Polynomial::new_random_with_degree(16);
@@ -65,7 +64,6 @@ async fn main() {
         cam.draw_grid();
         cam.draw_function(&f, RED);
         cam.draw_function(&p.to_function_of_x(), BLUE);
-        cam.draw_function(&g, GREEN);
         // cam.draw_function(&p1, GREEN);
         // cam.draw_function(&p2, YELLOW);
 

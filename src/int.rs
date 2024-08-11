@@ -61,7 +61,7 @@ pub fn int_composite_trapezoidal(f: &Function, (a, b): (f64, f64), n: usize) -> 
 
         sum += contribution * delta;
     }
-
+ 
     sum
 }
 
