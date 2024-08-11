@@ -6,13 +6,13 @@ use macroquad::ui::{hash, root_ui, widgets, Skin};
 mod approx;
 mod cam;
 mod func;
-mod int;
-mod num;
+mod integration;
+mod util;
 mod poly;
 
 use cam::Camera;
 use func::*;
-use num::Point;
+use util::Point;
 use poly::Polynomial;
 
 // =============================================================================

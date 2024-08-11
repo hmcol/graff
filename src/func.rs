@@ -1,6 +1,6 @@
 // create modules --------------------------------------------------------------
 
-use crate::poly::poly_eval;
+use crate::poly::{poly_eval, poly_mul};
 
 // Variable Index ==============================================================
 
@@ -29,7 +29,7 @@ pub enum Function {
     Sum(Vec<Function>),           // could be replaced with recursive Add
     Prod(Vec<Function>),          // could be replaced with recursive Mul
     PowI(Box<Function>, i32),     // integer power
-    Poly(Vec<f64>, VarIdx),       // polynomial with constant coefficients sum_i c_i*x^i
+    Poly(Vec<f64>),               // polynomial with constant coefficients sum_i c_i*x^i
     PolyF(Vec<Function>, VarIdx), // polynomial with function coefficients sum_i f_i(x)*x^i
 }
 
@@ -55,7 +55,7 @@ impl Function {
             Function::Sum(fs) => fs.iter().map(|f| f.eval(args)).sum(),
             Function::Prod(fs) => fs.iter().map(|f| f.eval(args)).product(),
             Function::PowI(f, n) => f.eval(args).powi(*n),
-            Function::Poly(coeffs, i) => poly_eval(coeffs, get_arg(args, *i)),
+            Function::Poly(coeffs) => poly_eval(coeffs, get_arg(args, 0)),
             Function::PolyF(fs, i) => {
                 let x = get_arg(args, *i);
                 fs.iter()
@@ -152,6 +152,7 @@ pub fn fn_neg(f: Function) -> Function {
 /// - f * const(0) := const(0)
 /// - const(1) * f := f
 /// - f * const(1) := f
+/// - poly(c1) * poly(c2) := poly(c1 * c2)
 pub fn fn_mul(f1: Function, f2: Function) -> Function {
     match (f1, f2) {
         (Function::Const(c1), Function::Const(c2)) => fn_const(c1 * c2),
@@ -159,6 +160,7 @@ pub fn fn_mul(f1: Function, f2: Function) -> Function {
         (_, Function::Const(0.0)) => fn_const(0.0),
         (Function::Const(1.0), f) => f,
         (f, Function::Const(1.0)) => f,
+        (Function::Poly(c1), Function::Poly(c2)) => fn_poly(poly_mul(&c1, &c2)),
         (f1, f2) => Function::Mul(Box::new(f1), Box::new(f2)),
     }
 }
@@ -267,7 +269,7 @@ pub fn fn_powi(f: Function, n: i32) -> Function {
 /// - `poly([]) := const(0)`
 /// - `poly([c]) := const(c)`
 /// - `poly([c0,...,cm,0,...,0]) := poly([c0,...,cm])`
-pub fn fn_poly(coeffs: Vec<f64>, i: VarIdx) -> Function {
+pub fn fn_poly(coeffs: Vec<f64>) -> Function {
     if coeffs.is_empty() {
         return fn_const(0.0);
     }
@@ -285,7 +287,15 @@ pub fn fn_poly(coeffs: Vec<f64>, i: VarIdx) -> Function {
         }
     }
 
-    Function::Poly(coeffs, i)
+    Function::Poly(coeffs)
+}
+
+/// returns the function sum_k f_k(x)*x^k where fs = [f0,...,fn] and x = x_i
+pub fn fn_poly_with_roots(roots: &[f64]) -> Function {
+    roots
+        .iter()
+        .map(|&r| fn_poly(vec![-r, 1.0]))
+        .fold(fn_const(1.0), fn_mul)
 }
 
 // =============================================================================
@@ -337,22 +347,17 @@ pub fn fn_pdv(f: &Function, i: usize) -> Function {
             fn_const(*n as f64),
             fn_mul(fn_powi(*f.clone(), *n - 1), fn_pdv(f, i)),
         ),
-        Function::Poly(cs, j) => {
-            // polynomial in x_j, if differentiating wrt to i != j, return 0
-            if *j != i {
-                return fn_const(0.0);
-            }
-
-            let mut coeffs = Vec::new();
-            for (k, c) in cs.iter().enumerate() {
+        Function::Poly(coeffs) => {
+            let mut new_coeffs = Vec::new();
+            for (k, c) in coeffs.iter().enumerate() {
                 // looking at term cx^k (i.e., c = c_k)
                 if k == 0 {
                     continue;
                 }
                 // pdv(cx^k) = (c*k)x^(k-1)
-                coeffs.push(c * (k as f64));
+                new_coeffs.push(c * (k as f64));
             }
-            fn_poly(coeffs, *j)
+            fn_poly(new_coeffs)
         }
         Function::PolyF(fs, j) => {
             let mut terms = Vec::new();
@@ -419,13 +424,13 @@ impl std::fmt::Display for Function {
                 write!(f, ")")
             }
             Function::PowI(g, n) => write!(f, "({}^{})", g, n),
-            Function::Poly(cs, i) => {
+            Function::Poly(coeffs) => {
                 write!(f, "(")?;
-                for (j, c) in cs.iter().enumerate() {
-                    if j > 0 {
+                for (k, c) in coeffs.iter().enumerate() {
+                    if k > 0 {
                         write!(f, " + ")?;
                     }
-                    write!(f, "{}*x_{}^{}", c, i, j)?;
+                    write!(f, "{}*x^{}", c, k)?;
                 }
                 write!(f, ")")
             }
@@ -440,5 +445,26 @@ impl std::fmt::Display for Function {
                 write!(f, ")")
             }
         }
+    }
+}
+
+// tests =======================================================================
+
+#[cfg(test)]
+mod test {
+    use std::vec;
+
+    use super::*;
+
+    #[test]
+    fn test_constructor() {
+        let roots = [1.0, 2.0, 3.0];
+
+        let p = roots
+            .iter()
+            .map(|&r| fn_poly(vec![-r, 1.0]))
+            .fold(fn_const(1.0), fn_mul);
+
+        print!("{}", p);
     }
 }

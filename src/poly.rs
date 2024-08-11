@@ -51,3 +51,19 @@ pub fn poly_eval(coeffs: &[f64], x: f64) -> f64 {
         .map(|(i, c)| c * x.powi(i as i32))
         .sum()
 }
+
+pub fn poly_mul(coeffs1: &[f64], coeffs2: &[f64]) -> Vec<f64> {
+    let mut coeffs = vec![0.0; coeffs1.len() + coeffs2.len() - 1];
+
+    for (k, c) in coeffs.iter_mut().enumerate() {
+        for i in 0..=k {
+            let a = coeffs1.get(i).copied().unwrap_or(0.0);
+            let b = coeffs2.get(k - i).copied().unwrap_or(0.0);
+
+            *c += a * b;
+        }
+    }
+
+    coeffs
+}
+

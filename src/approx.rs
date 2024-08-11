@@ -2,14 +2,14 @@ use std::vec;
 
 // -----------------------------------------------------------------------------
 
-use crate::{func::*, num::sample_interval_random, poly::poly_eval};
+use crate::{func::*, util::sample_interval_random, poly::poly_eval};
 
 // =============================================================================
 
 /// returns a new polynomial that is the result of one step of gradient descent
 pub fn compute_gradient_descent_step(
     f: &Function,
-    coeffs: &mut Vec<f64>,
+    coeffs: &mut [f64],
     interval: (f64, f64),
     sample_size: usize,
     step_size: f64,
