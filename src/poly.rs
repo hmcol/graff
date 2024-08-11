@@ -43,3 +43,11 @@ impl Polynomial {
         fn_sum(terms)
     }
 }
+
+pub fn poly_eval(coeffs: &[f64], x: f64) -> f64 {
+    coeffs
+        .iter()
+        .enumerate()
+        .map(|(i, c)| c * x.powi(i as i32))
+        .sum()
+}

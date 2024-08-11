@@ -1,4 +1,8 @@
-// =============================================================================
+// create modules --------------------------------------------------------------
+
+use crate::poly::poly_eval;
+
+// Variable Index ==============================================================
 
 /// type for identifying variables in functions
 ///
@@ -6,7 +10,7 @@
 /// the i-th variable is x_i and i is the VarIdx
 type VarIdx = usize;
 
-// =============================================================================
+// Function Expression =========================================================
 
 #[derive(Debug, Clone)]
 pub enum Function {
@@ -29,12 +33,14 @@ pub enum Function {
     PolyF(Vec<Function>, VarIdx), // polynomial with function coefficients sum_i f_i(x)*x^i
 }
 
+// evaluation ------------------------------------------------------------------
+
 impl Function {
     pub fn eval<T: AsRef<[f64]>>(&self, args: T) -> f64 {
         let args = args.as_ref();
         match self {
             // if i is out of bounds, return 0, should maybe return an Option::None
-            Function::Var(i) => args.get(*i).copied().unwrap_or(0.0),
+            Function::Var(i) => get_arg(args, *i),
             Function::Const(c) => *c,
             Function::Add(f, g) => f.eval(args) + g.eval(args),
             Function::Sub(f, g) => f.eval(args) - g.eval(args),
@@ -49,15 +55,9 @@ impl Function {
             Function::Sum(fs) => fs.iter().map(|f| f.eval(args)).sum(),
             Function::Prod(fs) => fs.iter().map(|f| f.eval(args)).product(),
             Function::PowI(f, n) => f.eval(args).powi(*n),
-            Function::Poly(cs, i) => {
-                let x = args.get(*i).copied().unwrap_or(0.0);
-                cs.iter()
-                    .enumerate()
-                    .map(|(i, c)| c * x.powi(i as i32))
-                    .sum()
-            }
+            Function::Poly(coeffs, i) => poly_eval(coeffs, get_arg(args, *i)),
             Function::PolyF(fs, i) => {
-                let x = args.get(*i).copied().unwrap_or(0.0);
+                let x = get_arg(args, *i);
                 fs.iter()
                     .enumerate()
                     .map(|(i, f)| f.eval(args) * x.powi(i as i32))
@@ -76,7 +76,11 @@ impl Function {
     }
 }
 
-// =============================================================================
+// utility ---------------------------------------------------------------------
+
+fn get_arg(args: &[f64], i: usize) -> f64 {
+    args.get(i).copied().unwrap_or(0.0)
+}
 
 impl From<f64> for Function {
     fn from(c: f64) -> Self {

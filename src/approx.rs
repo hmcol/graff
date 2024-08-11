@@ -2,50 +2,41 @@ use std::vec;
 
 // -----------------------------------------------------------------------------
 
-use crate::{func::*, num::sample_interval_random, poly::Polynomial};
+use crate::{func::*, num::sample_interval_random, poly::poly_eval};
 
 // =============================================================================
 
 /// returns a new polynomial that is the result of one step of gradient descent
 pub fn compute_gradient_descent_step(
     f: &Function,
-    p: &Polynomial,
+    coeffs: &mut Vec<f64>,
     interval: (f64, f64),
     sample_size: usize,
     step_size: f64,
-) -> Polynomial {
-    let grad = error_gradient(f, p, interval, sample_size);
+) {
+    let xs = sample_interval_random(interval, sample_size);
+    let grad = average_error_gradient(f, coeffs, &xs);
 
-    let mut new_coefficients = vec![0.0; p.degree() + 1];
-
-    for (k, c) in p.coefficients.iter().enumerate() {
-        new_coefficients[k] = c - step_size * grad[k];
+    for k in 0..coeffs.len() {
+        coeffs[k] += step_size * grad[k];
     }
-
-    Polynomial::new_with_coefficients(&new_coefficients)
 }
 
 /// returns the gradient of the error function e = (p - f)^2 averaged over a
 /// random sample of the interval
-fn error_gradient(
-    f: &Function,
-    p: &Polynomial,
-    interval: (f64, f64),
-    sample_size: usize,
-) -> Vec<f64> {
-    let xs = sample_interval_random(interval, sample_size);
+fn average_error_gradient(f: &Function, coeffs: &[f64], xs: &[f64]) -> Vec<f64> {
+    let degree = coeffs.len() - 1;
+    let mut grad = vec![0.0; coeffs.len()];
 
-    let mut grad = vec![0.0; p.degree() + 1];
-
-    for x in xs {
+    for &x in xs {
         let fx = f.eval([x]);
-        let px = p.to_function_of_x().eval([x]);
+        let px = poly_eval(coeffs, x);
 
-        for (k, _) in p.coefficients.iter().enumerate() {
+        for k in 0..degree {
             // c = [c_0, c_1, ..., c_d]
-            // d/dc_k (p_c(x) - f(x))^2 = 2(p_c(x) - f(x)) * x^k
+            // d/dc_k (f(x) - p_c(x))^2 = 2(p_c(x) - f(x)) * x^k
             // just ignore the 2 and it gets sucked into learning rate i guess
-            grad[k] += (px - fx) * x.powi(k as i32) / (sample_size as f64);
+            grad[k] += (fx - px) * x.powi(k as i32) / (xs.len() as f64);
         }
     }
 
@@ -53,4 +44,3 @@ fn error_gradient(
 }
 
 // -----------------------------------------------------------------------------
-

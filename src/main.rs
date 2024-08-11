@@ -36,6 +36,7 @@ async fn main() {
 
     // polynomial setup
     let mut p = Polynomial::new_random_with_degree(16);
+    let mut coeffs = p.coefficients.clone();
 
     loop {
         clear_background(WHITE);
@@ -58,7 +59,8 @@ async fn main() {
 
         // computations --------------------------------------------------------
 
-        p = approx::compute_gradient_descent_step(&f, &p, (-1.0, 1.0), 1000, 0.1);
+        approx::compute_gradient_descent_step(&f, &mut coeffs, (-1.0, 1.0), 1000, 0.1);
+        p.coefficients.clone_from(&coeffs);
 
         // drawing -------------------------------------------------------------
         cam.draw_grid();
