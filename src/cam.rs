@@ -146,6 +146,7 @@ impl Camera {
 
     fn euc_to_screen_x(&self, x: f64) -> f32 {
         // (x - left) + screen_width / cam_width
+        // don't know why x is negative.
         ((x - self.left()) * (screen_width() as f64) / self.width) as f32
     }
 

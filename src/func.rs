@@ -128,7 +128,7 @@ pub fn fn_sub(f1: Function, f2: Function) -> Function {
         (Function::Const(c1), Function::Const(c2)) => fn_const(c1 - c2),
         (f, Function::Const(0.0)) => f,
         (Function::Const(0.0), f) => fn_neg(f),
-        (f1, f2) => Function::Add(Box::new(f1), Box::new(f2)),
+        (f1, f2) => Function::Sub(Box::new(f1), Box::new(f2)),
     }
 }
 
@@ -454,6 +454,8 @@ impl std::fmt::Display for Function {
 mod test {
     use std::vec;
 
+    use crate::util::sample_interval_equidistributed;
+
     use super::*;
 
     #[test]
@@ -466,5 +468,17 @@ mod test {
             .fold(fn_const(1.0), fn_mul);
 
         print!("{}", p);
+    }
+
+    #[test]
+    fn test_eval() {
+        let f = fn_sub(fn_exp(X), fn_const(1.0));
+
+        let xs = sample_interval_equidistributed((-10.0, 10.0), 20);
+
+        for x in xs {
+            let y = f.eval([x]);
+            println!("f({}) = {}", x, y);
+        }
     }
 }

@@ -1,4 +1,21 @@
-use crate::Function;
+use crate::{fn_mul, Function};
+
+// methods =====================================================================
+
+#[derive(Debug, Clone, Copy)]
+pub enum IntMethod {
+    Midpoint(usize),
+    Trapezoidal(usize),
+    CompositeTrapezoidal(usize),
+}
+
+pub fn integrate(f: &Function, interval: (f64, f64), method: IntMethod) -> f64 {
+    match method {
+        IntMethod::Midpoint(n) => int_midpoint(f, interval, n),
+        IntMethod::Trapezoidal(n) => int_trapezoidal(f, interval, n),
+        IntMethod::CompositeTrapezoidal(n) => int_composite_trapezoidal(f, interval, n),
+    }
+}
 
 // =============================================================================
 
@@ -61,9 +78,23 @@ pub fn int_composite_trapezoidal(f: &Function, (a, b): (f64, f64), n: usize) -> 
 
         sum += contribution * delta;
     }
- 
+
     sum
 }
+
+// =============================================================================
+
+pub fn int_inner_product(
+    f: &Function,
+    g: &Function,
+    interval: (f64, f64),
+    method: IntMethod,
+) -> f64 {
+    let f_times_g = fn_mul(f.clone(), g.clone());
+    integrate(&f_times_g, interval, method)
+}
+
+// tests =======================================================================
 
 #[cfg(test)]
 mod test {
@@ -72,6 +103,7 @@ mod test {
 
     #[test]
     fn test_int() {
+        // f(x) = e^(-x^2)
         let f = fn_exp(fn_mul(fn_const(-1.0), fn_powi(X, 2)));
 
         let expected_int = 0.746824132812;
@@ -80,6 +112,33 @@ mod test {
             let int_m = int_midpoint(&f, (0.0, 1.0), num);
             let int_t = int_trapezoidal(&f, (0.0, 1.0), num);
             let int_ct = int_composite_trapezoidal(&f, (0.0, 1.0), num);
+
+            // print all three integral approximation errors in a nicely formatted row using scientific notation
+            println!(
+                "n = {:5} | e_m = {:1.2e} | e_t = {:1.2e} | e_ct = {:1.2e}",
+                num,
+                int_m - expected_int,
+                int_t - expected_int,
+                int_ct - expected_int
+            );
+        }
+    }
+
+    #[test]
+    fn test_inner_product() {
+        // f(x) = e^(-x^2)
+        let f = fn_exp(fn_neg(fn_powi(X, 2)));
+        // g(x) = 1 - x
+        let g = fn_sub(fn_const(1.0), X);
+
+        let expected_int = 1.493_648_265_624_854;
+
+        let interval = (-1.0, 1.0);
+
+        for num in [2, 3, 4, 5, 10, 15, 20, 100, 1000, 10000] {
+            let int_m = int_inner_product(&f, &g, interval, IntMethod::Midpoint(num));
+            let int_t = int_inner_product(&f, &g, interval, IntMethod::Trapezoidal(num));
+            let int_ct = int_inner_product(&f, &g, interval, IntMethod::CompositeTrapezoidal(num));
 
             // print all three integral approximation errors in a nicely formatted row using scientific notation
             println!(

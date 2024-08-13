@@ -2,7 +2,12 @@ use std::vec;
 
 // -----------------------------------------------------------------------------
 
-use crate::{func::*, util::sample_interval_random, polynomial::poly_eval};
+use crate::{
+    func::*,
+    integration::{int_inner_product, IntMethod},
+    polynomial::{get_legendre_rodrigues, poly_eval},
+    util::sample_interval_random,
+};
 
 // =============================================================================
 
@@ -43,4 +48,28 @@ fn average_error_gradient(f: &Function, coeffs: &[f64], xs: &[f64]) -> Vec<f64> 
     grad
 }
 
-// -----------------------------------------------------------------------------
+// =============================================================================
+
+pub fn compute_legendre_approx(f: &Function, int_method: IntMethod) -> Function {
+    let mut p = fn_const(0.0);
+
+    for n in 0..10 {
+        let legendre_coeffs = get_legendre_rodrigues(n);
+        let legendre_fn = fn_poly(legendre_coeffs);
+
+        // <l_n, h> = int_-1^1 l_n(x) * f(x) dx
+        let inner_product = int_inner_product(f, &legendre_fn, (-1.0, 1.0), int_method);
+
+        // (2n + 1) / 2
+        let scalar = (2.0 * (n as f64) + 1.0) / 2.0;
+
+        // coefficient a_n for the nth Legendre polynomial
+        let a = fn_const(scalar * inner_product);
+
+        let component = fn_mul(a, legendre_fn);
+
+        p = fn_add(p, component);
+    }
+
+    p
+}

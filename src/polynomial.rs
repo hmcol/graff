@@ -86,7 +86,7 @@ pub fn poly_derivative(coeffs: &[f64]) -> Vec<f64> {
 // legendre polynomials ========================================================
 
 /// Returns the coefficients of the nth Legendre polynomial using the Rodrigues formula.
-fn get_legendre_rodrigues(n: usize) -> Vec<f64> {
+pub fn get_legendre_rodrigues(n: usize) -> Vec<f64> {
     // a(x) = (x^2 - 1)
     let a = vec![-1.0, 0.0, 1.0];
     
@@ -110,6 +110,8 @@ fn get_legendre_rodrigues(n: usize) -> Vec<f64> {
     // p_n(x) = scalar * d^n/dx^n (x^2 - 1)^n
     poly_scale(&coeffs, scalar)
 }
+
+
 
 
 // tests =======================================================================

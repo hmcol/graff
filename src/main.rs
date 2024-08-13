@@ -1,3 +1,5 @@
+use approx::compute_legendre_approx;
+use integration::{int_inner_product, IntMethod};
 use macroquad::prelude::*;
 use macroquad::ui::{hash, root_ui, widgets, Skin};
 
@@ -7,13 +9,13 @@ mod approx;
 mod cam;
 mod func;
 mod integration;
-mod util;
 mod polynomial;
+mod util;
 
 use cam::Camera;
 use func::*;
-use util::Point;
 use polynomial::Polynomial;
+use util::Point;
 
 // =============================================================================
 
@@ -28,15 +30,23 @@ async fn main() {
 
     // function setup
 
-    //
-    let f = fn_exp(fn_mul(fn_const(-1.0), fn_powi(X, 2)));
+    // f1(x) = e^(-x^2)
+    let f1 = fn_exp(fn_neg(fn_powi(X, 2)));
+
+    // f2(x) = 1 - x
+    let f2 = fn_sub(fn_const(1.0), X);
+
+    let f = fn_mul(f1.clone(), f2.clone());
+
+    let p = compute_legendre_approx(&f, IntMethod::CompositeTrapezoidal(10000));
+
 
     // print functions
     // println!("f(x) = {}", f);
 
     // polynomial setup
-    let mut p = Polynomial::new_random_with_degree(16);
-    let mut coeffs = p.coefficients.clone();
+    // let mut p = Polynomial::new_random_with_degree(16);
+    // let mut coeffs = p.coefficients.clone();
 
     loop {
         clear_background(WHITE);
@@ -59,13 +69,15 @@ async fn main() {
 
         // computations --------------------------------------------------------
 
-        approx::compute_gradient_descent_step(&f, &mut coeffs, (-1.0, 1.0), 1000, 0.1);
-        p.coefficients.clone_from(&coeffs);
+        // approx::compute_gradient_descent_step(&f, &mut coeffs, (-1.0, 1.0), 1000, 0.1);
+        // p.coefficients.clone_from(&coeffs);
 
         // drawing -------------------------------------------------------------
         cam.draw_grid();
+        cam.draw_function(&f1, BLUE);
+        cam.draw_function(&f2, PURPLE);
         cam.draw_function(&f, RED);
-        cam.draw_function(&p.to_function_of_x(), BLUE);
+        cam.draw_function(&p, GREEN);
         // cam.draw_function(&p1, GREEN);
         // cam.draw_function(&p2, YELLOW);
 
