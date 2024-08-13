@@ -3,7 +3,8 @@ use macroquad::{color, prelude::*};
 // -----------------------------------------------------------------------------
 
 use crate::func::Function;
-use crate::util::Point;
+use crate::util::{sample_interval_equidistributed, Point};
+use crate::EvaluateOne;
 
 // =============================================================================
 
@@ -125,9 +126,11 @@ impl Camera {
         }
     }
 
-    pub fn draw_function(&self, f: &Function, color: Color) {
+    pub fn draw_function<F: EvaluateOne>(&self, f: &F, color: Color) {
         let interval = (self.left(), self.right());
-        let samples = f.sample(interval, 1000);
+
+        let xs = sample_interval_equidistributed(interval, 1000);
+        let samples: Vec<(f64, f64)> = xs.iter().map(|&x| (x, f.eval_one(x))).collect();
 
         let screen_points: Vec<(f32, f32)> = samples
             .iter()
@@ -138,7 +141,7 @@ impl Camera {
             let (x1, y1) = pair[0];
             let (x2, y2) = pair[1];
 
-            draw_line(x1, y1, x2, y2, 2.0, color);
+            draw_line(x1, y1, x2, y2, 3.0, color);
         }
     }
 

@@ -50,18 +50,18 @@ fn average_error_gradient(f: &Function, coeffs: &[f64], xs: &[f64]) -> Vec<f64> 
 
 // =============================================================================
 
-pub fn compute_legendre_approx(f: &Function, int_method: IntMethod) -> Function {
+pub fn compute_legendre_approx(f: &Function, n: usize, int_method: IntMethod) -> Function {
     let mut p = fn_const(0.0);
 
-    for n in 0..10 {
-        let legendre_coeffs = get_legendre_rodrigues(n);
+    for k in 0..n {
+        let legendre_coeffs = get_legendre_rodrigues(k);
         let legendre_fn = fn_poly(legendre_coeffs);
 
         // <l_n, h> = int_-1^1 l_n(x) * f(x) dx
         let inner_product = int_inner_product(f, &legendre_fn, (-1.0, 1.0), int_method);
 
         // (2n + 1) / 2
-        let scalar = (2.0 * (n as f64) + 1.0) / 2.0;
+        let scalar = (2.0 * (k as f64) + 1.0) / 2.0;
 
         // coefficient a_n for the nth Legendre polynomial
         let a = fn_const(scalar * inner_product);
@@ -73,3 +73,5 @@ pub fn compute_legendre_approx(f: &Function, int_method: IntMethod) -> Function 
 
     p
 }
+
+// =============================================================================

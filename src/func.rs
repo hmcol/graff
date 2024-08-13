@@ -2,6 +2,12 @@
 
 use crate::polynomial::{poly_eval, poly_mul};
 
+// Evaluation ==================================================================
+
+pub trait EvaluateOne {
+    fn eval_one(&self, x: f64) -> f64;
+}
+
 // Variable Index ==============================================================
 
 /// type for identifying variables in functions
@@ -73,6 +79,12 @@ impl Function {
             .map(|i| interval.0 + delta * (i as f64)) // x_i = left + delta_x * i
             .map(|x| (x, self.eval([x]))) // point_i = (x_i, f(x_i))
             .collect()
+    }
+}
+
+impl EvaluateOne for Function {
+    fn eval_one(&self, x: f64) -> f64 {
+        self.eval([x])
     }
 }
 
@@ -297,6 +309,7 @@ pub fn fn_poly_with_roots(roots: &[f64]) -> Function {
         .map(|&r| fn_poly(vec![-r, 1.0]))
         .fold(fn_const(1.0), fn_mul)
 }
+
 
 // =============================================================================
 

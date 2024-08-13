@@ -9,6 +9,7 @@ mod approx;
 mod cam;
 mod func;
 mod integration;
+mod ml;
 mod polynomial;
 mod util;
 
@@ -29,17 +30,16 @@ async fn main() {
     let mut cam = Camera::default();
 
     // function setup
+    let f = fn_sum(vec![
+        fn_powi(X, 3),
+        fn_neg(fn_exp(X)),
+        fn_div(fn_sin(fn_mul(fn_const(10.0), X)), fn_const(4.0)),
+        fn_const(1.5),
+    ]);
 
-    // f1(x) = e^(-x^2)
-    let f1 = fn_exp(fn_neg(fn_powi(X, 2)));
+    let p = compute_legendre_approx(&f, 12, IntMethod::CompositeTrapezoidal(10000));
 
-    // f2(x) = 1 - x
-    let f2 = fn_sub(fn_const(1.0), X);
-
-    let f = fn_mul(f1.clone(), f2.clone());
-
-    let p = compute_legendre_approx(&f, IntMethod::CompositeTrapezoidal(10000));
-
+    let nn = ml::NeuralNetwork::new(1, 10, 1);
 
     // print functions
     // println!("f(x) = {}", f);
@@ -74,10 +74,9 @@ async fn main() {
 
         // drawing -------------------------------------------------------------
         cam.draw_grid();
-        cam.draw_function(&f1, BLUE);
-        cam.draw_function(&f2, PURPLE);
         cam.draw_function(&f, RED);
         cam.draw_function(&p, GREEN);
+        cam.draw_function(&nn, PURPLE);
         // cam.draw_function(&p1, GREEN);
         // cam.draw_function(&p2, YELLOW);
 

@@ -1,0 +1,62 @@
+use ndarray::{Array1, Array2};
+use rand::Rng;
+
+use crate::EvaluateOne;
+
+pub struct NeuralNetwork {
+    input_size: usize,
+    hidden_size: usize,
+    output_size: usize,
+    weights_ih: Array2<f64>,
+    weights_ho: Array2<f64>,
+}
+
+impl NeuralNetwork {
+    pub fn new(input_size: usize, hidden_size: usize, output_size: usize) -> Self {
+        let mut rng = rand::thread_rng();
+        let mut rng_fn = || rng.gen_range(-1.0..1.0);
+
+        NeuralNetwork {
+            input_size,
+            hidden_size,
+            output_size,
+            // bias trick: last column is the bias
+            weights_ih: Array2::from_shape_simple_fn((hidden_size, input_size + 1), &mut rng_fn),
+            weights_ho: Array2::from_shape_simple_fn((output_size, hidden_size + 1), &mut rng_fn),
+        }
+    }
+
+    pub fn forward(&self, input: &Array1<f64>) -> Array1<f64> {
+        // add a 1 to end for bias trick
+        let aug_input = augment(input);
+
+        let hidden = self.weights_ih.dot(&aug_input);
+        let hidden = hidden.map(|x| leaky_relu(*x));
+
+        // add a 1 to end for bias trick
+        let aug_hidden = augment(&hidden);
+
+        let output = self.weights_ho.dot(&aug_hidden);
+        output.map(|x| leaky_relu(*x))
+    }
+}
+
+fn leaky_relu(x: f64) -> f64 {
+    if x > 0.0 {
+        x
+    } else {
+        0.01 * x
+    }
+}
+
+fn augment(v: &Array1<f64>) -> Array1<f64> {
+    Array1::from_iter(v.iter().cloned().chain(std::iter::once(1.0)))
+}
+
+impl EvaluateOne for NeuralNetwork {
+    fn eval_one(&self, x: f64) -> f64 {
+        let input = Array1::from(vec![x]);
+        let output = self.forward(&input);
+        output[0]
+    }
+}
