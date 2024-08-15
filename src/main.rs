@@ -16,7 +16,7 @@ use cam::Camera;
 use func::*;
 use integration::{int_inner_product, IntMethod};
 use polynomial::Polynomial;
-use util::{sample_interval_random, Point};
+use util::{sample_interval_equidistributed, sample_interval_random, Point};
 
 // =============================================================================
 
@@ -33,13 +33,13 @@ async fn main() {
     let f = fn_sum(vec![
         fn_powi(X, 3),
         fn_neg(fn_exp(X)),
-        // fn_div(fn_sin(fn_mul(fn_const(10.0), X)), fn_const(4.0)),
-        fn_const(1.5),
+        fn_div(fn_sin(fn_mul(fn_const(10.0), X)), fn_const(4.0)),
+        fn_const(1.0),
     ]);
 
     let p = compute_legendre_approx(&f, 12, IntMethod::CompositeTrapezoidal(10000));
 
-    let mut nn = ml::NeuralNetwork::new(1, 16, 1);
+    let mut nn = ml::NeuralNetwork::new(1, 32, 1);
 
     // print functions
     // println!("f(x) = {}", f);

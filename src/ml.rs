@@ -41,40 +41,6 @@ impl NeuralNetwork {
         output
     }
 
-    pub fn backward(&mut self, input: &Array1<f64>, target: &Array1<f64>, learning_rate: f64) {
-        // forward pass
-        let aug_input = augment(input);
-        let hidden = self.weights_ih.dot(&aug_input);
-        let hidden_activated = hidden.map(|x| leaky_relu(*x));
-        let aug_hidden = augment(&hidden_activated);
-        let output = self.weights_ho.dot(&aug_hidden);
-        let output_activated = output.map(|x| leaky_relu(*x));
-
-        // compute error
-        let output_error = target - &output_activated;
-        let output_delta = &output_error * &output_activated.map(|x| 1.0);
-
-        let hidden_error = self.weights_ho.t().slice(s![..-1, ..]).dot(&output_delta);
-        let hidden_delta = &hidden_error * &hidden_activated.map(|x| leaky_relu_derivative(*x));
-
-        // update weights
-        for (i, delta) in output_delta.iter().enumerate() {
-            self.weights_ho
-                .row_mut(i)
-                .zip_mut_with(&aug_hidden, |w, &h| {
-                    *w += learning_rate * delta * h;
-                });
-        }
-
-        for (i, delta) in hidden_delta.iter().enumerate() {
-            self.weights_ih
-                .row_mut(i)
-                .zip_mut_with(&aug_input, |w, &inp| {
-                    *w += learning_rate * delta * inp;
-                });
-        }
-    }
-
     pub fn train_batch(
         &mut self,
         inputs: &Vec<Array1<f64>>,
@@ -96,8 +62,8 @@ impl NeuralNetwork {
 
             let aug_hidden = augment(&hidden_activated);
             let output = self.weights_ho.dot(&aug_hidden);
-            let output_activated = output.map(|x| leaky_relu(*x));
-            output_outs.push(output_activated.clone());
+            // let output_activated = output.map(|x| leaky_relu(*x));
+            output_outs.push(output.clone());
         }
 
         // compute error
@@ -164,6 +130,15 @@ fn leaky_relu_derivative(x: f64) -> f64 {
     } else {
         0.01
     }
+}
+
+fn sigmoid(x: f64) -> f64 {
+    1.0 / (1.0 + (-x).exp())
+}
+
+fn sigmoid_derivative(x: f64) -> f64 {
+    let s = sigmoid(x);
+    s * (1.0 - s)
 }
 
 fn augment(v: &Array1<f64>) -> Array1<f64> {
