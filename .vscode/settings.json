@@ -12,6 +12,7 @@
         "subexpressions",
         "subinterval",
         "subintervals",
-        "summands"
+        "summands",
+        "unsized"
     ]
 }
